@@ -1,29 +1,108 @@
-// import { Request, Response } from 'express';
-// import { AuthService } from './auth.service';
-// import { User } from '../user/user.model';
-// import { generateToken } from '../../shared/jwt';
+import status from "http-status";
+import { catchAsyncFun } from "../../shared/catchAsyncFun";
+import sendResponse from "../../shared/sendResponse";
+import { AuthService } from "./auth.service";
+import { config } from "../../env";
+import { verifyToken } from "../../shared/jwt";
+import { JwtPayload } from "jsonwebtoken";
+import User from "../user/user.model";
 
-// class AuthController {
-//     async register(req: Request, res: Response) {
-//         try {
-//             const user = await AuthService.register(req.body);
-//             const token = generateToken(user._id);
-//             res.status(201).json({ user, token });
-//         } catch (error) {
-//             res.status(400).json({ message: error.message });
-//         }
-//     }
+const login = catchAsyncFun(async (req, res, next) => {
+  console.log("Login route HIT ✅");
+  const loginData = req.body;
+  console.log("loginData", loginData);
+  const { accessToken, refreshToken } = await AuthService.login(loginData);
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: config.NODE_ENV === "production",
+  });
 
-//     async login(req: Request, res: Response) {
-//         try {
-//             const { email, password } = req.body;
-//             const user = await AuthService.login(email, password);
-//             const token = generateToken(user._id);
-//             res.status(200).json({ user, token });
-//         } catch (error) {
-//             res.status(401).json({ message: error.message });
-//         }
-//     }
-// }
+  console.log("accessToken", accessToken);
+  console.log("refreshToken", refreshToken);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "User logged in successfully",
+    data: accessToken,
+  });
+});
+const changePassword = catchAsyncFun(async (req, res, next) => {
+  const newData = req.body;
 
-// export const authController = new AuthController();
+  if (!req.user) {
+    throw new Error("User not found");
+  }
+
+  const { accessToken, refreshToken } = await AuthService.changePassword(
+    req.user,
+    newData
+  );
+
+  console.log("accessToken", accessToken);
+  console.log("refreshToken", refreshToken);
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: config.NODE_ENV === "production",
+  });
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "password change in successfully",
+    data: accessToken,
+  });
+});
+
+const refreshToken = catchAsyncFun(async (req, res, next) => {
+  const token = req.cookies.refreshToken;
+
+  const secretKey = config.JWT_REFRESH_SECRET as string;
+
+  const decoded = verifyToken(token, secretKey) as JwtPayload;
+  console.log("decoded", decoded);
+  const { userId } = decoded;
+  const iat: number = decoded.iat as number;
+
+  const user = await User.isUserExist(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user?.isDeleted === true) {
+    throw new Error("User is deleted");
+  }
+
+  if (user?.isActive === "blocked" || user?.isActive === "inactive") {
+    throw new Error("User is blocked");
+  }
+
+  if (
+    user?.passwordChangeAt &&
+    User.isPasswordTimestampValid(user?.passwordChangeAt, iat)
+  ) {
+    throw new Error("Password has been changed");
+  }
+
+  const { accessToken, refreshToken } = await AuthService.refreshToken(
+    user,
+    token
+  );
+
+  console.log("refreshToken", refreshToken);
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: config.NODE_ENV === "production",
+  });
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "password change in successfully",
+    data: accessToken,
+  });
+});
+
+export const AuthController = {
+  login,
+  changePassword,
+  refreshToken,
+};

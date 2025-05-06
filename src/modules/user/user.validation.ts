@@ -26,7 +26,3 @@ export const userValidationSchema = z.object({
       .default("customer"),
   }),
 });
-
-export const userValidation = {
-  createUser: userValidationSchema,
-};

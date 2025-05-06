@@ -4,19 +4,22 @@ import cors from "cors";
 import globalErrorHandler from "./middleware/globalError.middleware";
 import routes from "./routes"; // Import routes
 import notFoundHandler from "./middleware/notFound.middleware";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 // Centralized Routes from the array in `routes.ts`
-app.use(routes);
+app.use("/api", routes);
 
-// Not Found Handler
-app.use(notFoundHandler);
-// Global Error Handler
 app.use(globalErrorHandler);
-
+app.use(notFoundHandler);
 export default app;

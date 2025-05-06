@@ -1,6 +1,11 @@
-export interface AuthCredentials {
-  email: string;
+import { Roles } from "../../constants/role";
+export interface TloginInput {
+  userId: string;
   password: string;
+}
+export interface TchangePasswordInput {
+  oldPassword: string;
+  newPassword: string;
 }
 
 export interface AuthResponse {
@@ -14,3 +19,5 @@ export interface TokenPayload {
   iat?: number;
   exp?: number;
 }
+
+export type UserRoleType = keyof typeof Roles;

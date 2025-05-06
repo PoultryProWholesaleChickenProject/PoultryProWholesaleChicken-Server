@@ -3,11 +3,18 @@ import { Request, Response } from "express";
 import { IUser } from "./user.interface";
 import { userServices } from "./user.service";
 import { catchAsyncFun } from "../../shared/catchAsyncFun";
+import sendResponse from "../../shared/sendResponse";
+import status from "http-status";
 
 const createUser = catchAsyncFun(async (req, res, next) => {
   const userData: IUser = req.body;
   const newUser = await userServices.createUser(userData);
-  res.status(201).json(newUser);
+  sendResponse(res, {
+    statusCode: status.CREATED,
+    success: true,
+    message: "User created successfully",
+    data: newUser,
+  });
 });
 
 // export const getUser = async (req: Request, res: Response): Promise<void> => {
