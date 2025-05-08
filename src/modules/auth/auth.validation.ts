@@ -22,8 +22,21 @@ const refrashTokenSchema = z.object({
     }),
   }),
 });
+const forgetPassword = z.object({
+  body: z.object({
+    userId: z.string().min(1, "User ID is required"),
+  }),
+});
+const resetPassword = z.object({
+  body: z.object({
+    userId: z.string().min(1, "User ID is required"),
+    password: z.string().min(6, "Password must be at least 6 characters long"),
+  }),
+});
 export const authValidation = {
   loginSchema,
   passwordChangeSchema,
   refrashTokenSchema,
+  forgetPassword,
+  resetPassword,
 };

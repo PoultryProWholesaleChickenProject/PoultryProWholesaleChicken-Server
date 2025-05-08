@@ -19,6 +19,8 @@ router.post(
   validationMiddleware(userValidationSchema),
   userController.createUser
 );
+
+router.get("/me", userController.getme);
 // // Route to get a user by ID
 // router.get('/:id', getUser);
 

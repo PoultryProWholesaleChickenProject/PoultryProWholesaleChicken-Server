@@ -5,7 +5,6 @@ import { catchAsyncFun } from "../shared/catchAsyncFun";
 import { UserRoleType } from "../modules/auth/auth.interface";
 import User from "../modules/user/user.model";
 import { config } from "../env";
-import jwt from "jsonwebtoken";
 
 const auth = (...userRole: UserRoleType[]) => {
   return catchAsyncFun(
