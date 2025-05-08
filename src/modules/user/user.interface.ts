@@ -1,5 +1,4 @@
 import { Model } from "mongoose";
-import { Roles } from "../../constants/role";
 
 export interface IUser {
   id: string;
