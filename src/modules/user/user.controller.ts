@@ -17,51 +17,25 @@ const createUser = catchAsyncFun(async (req, res, next) => {
   });
 });
 
-// export const getUser = async (req: Request, res: Response): Promise<void> => {
-//     try {
-//         const userId = req.params.id;
-//         const user = await userService.getUserById(userId);
-//         if (!user) {
-//             res.status(404).json({ message: 'User not found' });
-//             return;
-//         }
-//         res.status(200).json(user);
-//     } catch (error) {
-//         res.status(500).json({ message: 'Error retrieving user', error });
-//     }
-// };
+const getme = catchAsyncFun(async (req, res, next) => {
+  const token = req.headers.authorization;
 
-// export const updateUser = async (req: Request, res: Response): Promise<void> => {
-//     try {
-//         const userId = req.params.id;
-//         const userData: User = req.body;
-//         const updatedUser = await userService.updateUser(userId, userData);
-//         if (!updatedUser) {
-//             res.status(404).json({ message: 'User not found' });
-//             return;
-//         }
-//         res.status(200).json(updatedUser);
-//     } catch (error) {
-//         res.status(500).json({ message: 'Error updating user', error });
-//     }
-// };
+  if (!token) {
+    throw new Error("Token not provided");
+  }
+  const result = await userServices.getme(token);
 
-// export const deleteUser = async (req: Request, res: Response): Promise<void> => {
-//     try {
-//         const userId = req.params.id;
-//         const result = await userService.deleteUser(userId);
-//         if (!result) {
-//             res.status(404).json({ message: 'User not found' });
-//             return;
-//         }
-//         res.status(204).send();
-//     } catch (error) {
-//         res.status(500).json({ message: 'Error deleting user', error });
-//     }
-// };
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "User fetched successfully",
+    data: result,
+  });
+});
 
 export const userController = {
   createUser,
+  getme,
   // getUser,
   // updateUser,
   // deleteUser,
