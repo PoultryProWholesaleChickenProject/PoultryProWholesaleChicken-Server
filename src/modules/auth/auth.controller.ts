@@ -101,8 +101,65 @@ const refreshToken = catchAsyncFun(async (req, res, next) => {
   });
 });
 
+const forgotPassword = catchAsyncFun(async (req, res, next) => {
+  const { userId } = req.body;
+
+  const user = await User.isUserExist(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user?.isDeleted === true) {
+    throw new Error("User is deleted");
+  }
+
+  if (user?.isActive === "blocked" || user?.isActive === "inactive") {
+    throw new Error("User is blocked");
+  }
+
+  const token = await AuthService.forgotPassword(user);
+
+  console.log("refreshToken", refreshToken);
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: config.NODE_ENV === "production",
+  });
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "send link for password reset successfully",
+    data: null,
+  });
+});
+
+const resetPassword = catchAsyncFun(async (req, res, next) => {
+  const token = req.headers.authorization;
+  if (!token) {
+    throw new Error("Token not provided");
+  }
+  const resetData = req.body;
+
+  const { accessToken, refreshToken } = await AuthService.resetPassword(
+    resetData,
+    token
+  );
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: config.NODE_ENV === "production",
+  });
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "password reset successfully",
+    data: accessToken,
+  });
+});
+
 export const AuthController = {
   login,
   changePassword,
   refreshToken,
+  forgotPassword,
+  resetPassword,
 };
